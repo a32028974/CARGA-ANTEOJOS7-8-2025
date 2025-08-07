@@ -155,7 +155,10 @@
       });
 
       try {
-        const res = await fetch(`${scriptURL}?${params.toString()}`);
+        const urlFinal = `${scriptURL}?${params.toString()}`;
+console.log("📤 URL de envío:", urlFinal);
+const res = await fetch(urlFinal);
+
         const data = await res.json();
 
         if (data.success) {
