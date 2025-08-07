@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cargar armazón</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      padding: 20px;
+      max-width: 500px;
+      margin: auto;
+    }
+    h2 {
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 10px;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    #estado {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h2>Nuevo Armazón</h2>
+
+  <label>N° Anteojo</label>
+  <input type="number" id="n_anteojo" readonly />
+
+  <label>Marca</label>
+  <input type="text" id="marca" />
+
+  <label>Modelo</label>
+  <input type="text" id="modelo" />
+
+  <label>Código color</label>
+  <input type="text" id="codigo_color" />
+
+  <label>Color armazón</label>
+  <input type="text" id="color_armazon" />
+
+  <label>Calibre</label>
+  <input type="text" id="calibre" />
+
+  <label>Color cristal</label>
+  <input type="text" id="color_cristal" />
+
+  <label>Familia</label>
+  <select id="familia" onchange="calcularPrecio()">
+    <option value="">-- Seleccionar --</option>
+    <option value="SOL">SOL</option>
+    <option value="RECETA">RECETA</option>
+  </select>
+
+  <label>Costo</label>
+  <input type="number" id="costo" oninput="calcularPrecio()" />
+
+  <label>Precio público</label>
+  <input type="number" id="precio" readonly />
+
+  <label>Código de barras</label>
+  <input type="text" id="codigo_barras" />
+
+  <label>Observaciones</label>
+  <input type="text" id="observaciones" />
+
+  <button onclick="guardar()">Guardar</button>
+
+  <p id="estado"></p>
+
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbwTRGt2r_BiG-d_YM59jcOapADtr01o1PABD4QUT-br12Kw87--BVWwi4FF1pmcPIPHCw/exec";
+
+    // Al cargar, buscar el primer número vacío
+    window.onload = async () => {
+      try {
+        const res = await fetch(scriptURL + "?todos=true");
+        const datos = await res.json();
+
+        let numero = 0;
+        for (let i = 1; i < datos.length; i++) {
+          const fila = datos[i];
+          const estaVacia = fila.slice(1, 8).every(c => !c); // Marca a Familia
+          if (fila[0] && estaVacia) {
+            numero = fila[0];
+            break;
+          }
+        }
+
+        document.getElementById("n_anteojo").value = numero || "NO DISPONIBLE";
+      } catch (err) {
+        document.getElementById("estado").innerText = "Error al buscar número.";
+      }
+    };
+
+    function calcularPrecio() {
+      const costo = parseFloat(document.getElementById("costo").value);
+      const familia = document.getElementById("familia").value;
+
+      if (!isNaN(costo) && (familia === "SOL" || familia === "RECETA")) {
+        const multiplicador = familia === "RECETA" ? 3.63 : 2.42;
+        const precio = Math.round(costo * multiplicador);
+        document.getElementById("precio").value = precio;
+      } else {
+        document.getElementById("precio").value = "";
+      }
+    }
+
+    async function guardar() {
+      const n_anteojo = document.getElementById("n_anteojo").value;
+      const marca = document.getElementById("marca").value.trim();
+      const modelo = document.getElementById("modelo").value.trim();
+      const codigo_color = document.getElementById("codigo_color").value.trim();
+      const color_armazon = document.getElementById("color_armazon").value.trim();
+      const calibre = document.getElementById("calibre").value.trim();
+      const color_cristal = document.getElementById("color_cristal").value.trim();
+      const familia = document.getElementById("familia").value;
+      const precio = document.getElementById("precio").value;
+      const costo = document.getElementById("costo").value;
+      const codigo_barras = document.getElementById("codigo_barras").value.trim();
+      const observaciones = document.getElementById("observaciones").value.trim();
+
+      if (!n_anteojo || !marca || !modelo || !familia || !precio || !costo) {
+        alert("Por favor completá los campos obligatorios.");
+        return;
+      }
+
+      const fecha_ingreso = new Date().toLocaleDateString('es-AR');
+
+      const params = new URLSearchParams({
+        n_anteojo,
+        marca,
+        modelo,
+        codigo_color,
+        color_armazon,
+        calibre,
+        color_cristal,
+        familia,
+        precio,
+        costo,
+        fecha_ingreso,
+        codigo_barras,
+        observaciones
+      });
+
+      try {
+        const res = await fetch(`${scriptURL}?${params.toString()}`);
+        const data = await res.json();
+
+        if (data.success) {
+          document.getElementById("estado").innerText = `Guardado correctamente en ${n_anteojo}.`;
+          setTimeout(() => location.reload(), 1500); // recarga para mostrar el siguiente
+        } else {
+          document.getElementById("estado").innerText = "Error al guardar.";
+        }
+      } catch (err) {
+        document.getElementById("estado").innerText = "Error al conectar con el servidor.";
+      }
+    }
+  </script>
+</body>
+</html>
