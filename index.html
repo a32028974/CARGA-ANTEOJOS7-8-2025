@@ -33,7 +33,7 @@
   </style>
 </head>
 <body>
-  <h2>Nuevo Armazón</h2>
+  <h2>Nuevo Armazón V17.38 </h2>
 
   <label>N° Anteojo</label>
   <input type="number" id="n_anteojo" readonly />
@@ -155,9 +155,28 @@
       });
 
       try {
-        const urlFinal = `${scriptURL}?${params.toString()}`;
-console.log("📤 URL de envío:", urlFinal);
-const res = await fetch(urlFinal);
+       const res = await fetch(scriptURL, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    n_anteojo,
+    marca,
+    modelo,
+    codigo_color,
+    color_armazon,
+    calibre,
+    color_cristal,
+    familia,
+    precio,
+    costo,
+    fecha_ingreso,
+    codigo_barras,
+    observaciones
+  })
+});
+
 
         const data = await res.json();
 
